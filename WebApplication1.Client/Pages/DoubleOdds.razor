@@ -1,0 +1,26 @@
+﻿@page "/doubleodds"
+@using WebApplication1.Shared
+
+
+<div>
+    <section>
+        @if (SelectedDay.DoubleOdds != null)
+        {
+            <div class="DoubleOdds">
+                @foreach (var item in SelectedDay.DoubleOdds)
+                {
+                    <div class="EachDoubleOdds">@item</div>
+                }
+            </div>
+        }
+        else
+        {
+            <p><em style="background-color:red">DoubleOdds don't found! </em></p>
+        }
+    </section>
+</div>
+
+@code {
+    [Parameter]
+    public DayTrackInfo SelectedDay { get; set; }
+}

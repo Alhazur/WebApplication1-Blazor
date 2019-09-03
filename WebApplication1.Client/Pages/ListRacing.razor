@@ -1,0 +1,210 @@
+﻿@page "/listracing"
+@using WebApplication1.Shared
+@inject HttpClient Http
+@inject B75Config _Config
+@inject Toolbelt.Blazor.I18nText.I18nText I18nText
+
+
+@if (comingRaces == null)
+{
+    <p><em>ListRacing is Loading...</em></p>
+}
+else
+{
+    <div>
+        <div class="RaceCalendar">
+            <div class="SelectDay">@MyText.SelectDay</div>
+            @*<div>@DateTime.Now.DayOfWeek.ToString()</div>*@
+            @foreach (var raceDate in comingRaceDates)
+            {
+                <div class="btn RaceDayDate @(selectedDate == raceDate.Date ? "active" : "")" @onclick=@(() => ChangeDay(raceDate.Date))>
+                    <div>@raceDate.Date.DayOfWeek.ToString().Substring(0, 3)</div>
+                    <div class="">@raceDate.Date.ToString("dd")</div>
+                </div>
+            }
+        </div>
+
+        @foreach (var raceDate in comingRaceDates)
+        {
+            //                          esli den segodnya i den gonki ravni to sdelat vidimimi tolko segodnya
+            <div class="divRaceDay" style="display: @(selectedDate == raceDate.Date  ? "block" : "none")">
+                @*(r.RaceDayDate.year) - umnojit tak kak na primere i - sravnit s (raceDate.Date.Year * 10000)
+                    s novil masivom kotorij vibiraet dni*@
+                @foreach (var race in comingRaces.Where(r => r.RaceDayDate.year * 10000 + r.RaceDayDate.month * 100 + r.RaceDayDate.date == raceDate.Date.Year * 10000 + raceDate.Date.Month * 100 + raceDate.Date.Day))
+                {
+                    @if (race.TrackPoolSetups != null && race.GotRaces)
+                    {
+                        @*<div>Data: @race.RaceDayDate.year-@race.RaceDayDate.month-@race.RaceDayDate.date</div>*@
+                        <div class="RaceCalendarDayRaces">
+
+                            <div class="RaceHeader">
+                                <div class="RaceHeader1">
+                                    @*                                                                                                                    ++2 nujen argyment v onklik 1 variabol 1 argyment dlya togo chtobi ispolzovat ih*@
+                                    <div class="ArrowMenuBtn @(NavMenuCssClass == "TMenuOpen" && selectedTrackId == race.TrackId ? ArrowClass : "")" @onclick="@(() => TMenu(race.TrackId, raceDate.Date))">
+                                        <i class="fa fa-chevron-down"></i>
+                                    </div>
+                                    <div class="TrackName">@race.TrackName</div>
+                                    <div class="Raceflag @race.CountryCode">&nbsp;</div>
+                                </div>
+                                <div class="RaceHeader2">
+                                    @if (!string.IsNullOrEmpty(race.NextBetType))
+                                    {
+                                        <div>BET CLOSING</div>
+                                        <div class="BETCLOSING">
+                                            <div>@race.NextPostDateTimeUTC.Value.ToLocalTime().ToShortTimeString()</div>
+                                            <div class="vvv @race.NextBetType">@race.NextBetType</div>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                            @*                                                              ++2 teper neobhodimo etot argymen i novij variabol*@
+                            <div class="@(NavMenuCssClass == "TMenuOpen" && raceDate.Date == selectedOpenDate && selectedTrackId == race.TrackId ? "BetType2" : "BetType") ">
+
+                                <div class="@(NavMenuCssClass == "TMenuOpen" && raceDate.Date == selectedOpenDate && selectedTrackId == race.TrackId ? "RaceTitel" : "UnRaceTitel")">
+                                    <div>BetType</div>
+                                    <div>Omsättning</div>
+                                    <div>Slut</div>
+                                </div>
+
+                                @foreach (var trackPool in race.TrackPoolSetups)
+                                {
+
+                                    @*                  ++2 teper neobhodimo etot argymen i novij variabol*@
+                                    @if (NavMenuCssClass == "TMenuOpen" && selectedTrackId == race.TrackId && raceDate.Date == selectedOpenDate)
+                                    {
+                                        <div class="@NavMenuCssClass">
+                                            <div class="vvv @trackPool.BetType.code">
+                                                <a href="trackday/@raceDate.Date.Year @raceDate.Date.Month @raceDate.Date.Day/@trackPool.MainTrackSlugName/@trackPool.BetType.code">
+                                                    @trackPool.BetType.code
+                                                </a>
+                                            </div>
+                                            <div class="Turnover2">
+                                                <div class="TurnoverValue">@trackPool.Turnover?.sum.Value.ToString("0") Kr</div>
+                                            </div>
+                                            <div class="CloseTime">
+                                                @* PostDateTimeUTC can have some value or/and Null*@
+                                                @if (trackPool.PostDateTimeUTC.HasValue)
+                                                {
+                                                    <div>@trackPool.PostDateTimeUTC.Value.ToLocalTime().ToShortTimeString()</div>
+                                                }
+                                            </div>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <div class="vvv @trackPool.BetType.code">
+                                            <a href="trackday/@raceDate.Date.Year @raceDate.Date.Month @raceDate.Date.Day/@trackPool.MainTrackSlugName/@trackPool.BetType.code">
+                                                @trackPool.BetType.code
+                                            </a>
+                                        </div>
+                                    }
+                                }
+                            </div>
+                        </div>
+                    }
+                }
+            </div>
+        }
+    </div>
+}
+
+@code {
+    List<RaceCalendarDayRaces> comingRaces;
+    //?
+    List<RaceDate> comingRaceDates = new List<RaceDate>();
+
+    //neobhodimo novij massiv dlya togo chtobi vibrat den kotorij neobhodimo
+    //vibrat v moemslychay eto pervij [0]- 1 den selectedDate = dates[0]; i zakinyt v
+    //protected override async Task OnInitAsync() ++1
+    DateTime selectedDate;
+
+    int selectedTrackId;//++2 snachalo sozdat variabal
+
+    DateTime selectedOpenDate;
+
+    bool CMenu = true;
+
+    string NavMenuCssClass => CMenu ? "" : "TMenuOpen";
+
+    string ArrowClass => CMenu ? "" : "TMenu";
+
+    //++2 potom v metode zadat novij variabal i soedinit staroj dlya vizova
+    void TMenu(int selTrackId, DateTime selOpenDate)
+    {
+        selectedTrackId = selTrackId;//++2 kak sdes
+        selectedOpenDate = selOpenDate;
+        CMenu = !CMenu;
+        Console.WriteLine(selectedTrackId);
+    }
+
+    //This code to Globalization Language
+    I18nText.MyText MyText = new I18nText.MyText();
+
+    protected override async Task OnInitializedAsync()
+    {
+        MyText = await I18nText.GetTextTableAsync<I18nText.MyText>(this);
+
+        if (!_Config.ConfigLoaded)
+        {
+            await _Config.GetConfig();
+        }
+
+        //?
+        //pokajet stolko dneya skolko zahochesh
+        var dates = Enumerable.Range(0, 6).Select(i => DateTime.Now.Date.AddDays(i)).ToList();
+
+        //dlya foreach (var raceDate in comingRaceDates) doljen bit vibran den
+        //putem vizivaya list new RaceDate(), vibrat den i true
+        comingRaceDates.Add(new RaceDate()
+        {
+            Date = dates[0].Date,
+            IsSelected = true
+        });
+
+        //etot for nujen dlya togo chtobi pokazivat te 6 dnej dlya
+        //style="display: @(raceDate.Date == selectedDate ? "block" : "none")"
+        for (int i = 1; i < dates.Count; i++)
+        {
+            comingRaceDates.Add(new RaceDate()
+            {
+                Date = dates[i].Date
+            });
+        }
+
+        //?
+        //++1
+        selectedDate = dates[0];
+
+        ReturnValue<List<RaceCalendarDayRaces>> rvComingRaces = await Http.GetJsonAsync<ReturnValue<List<RaceCalendarDayRaces>>>(
+                System.IO.Path.Combine(_Config.ConfigOptionsAPIServices.DataServiceAPI.Url, "RaceDayCalendar"));
+
+        Console.WriteLine("Iz listracing NicerErrorMessage" + rvComingRaces.NicerErrorMessage);
+
+        comingRaces = rvComingRaces.ReturnObject;
+
+        foreach (var race in comingRaces)
+        {
+            race.GotRaces = false;
+            race.NextPostDateTimeUTC = DateTime.MaxValue;
+
+            foreach (var tps in race.TrackPoolSetups)
+            {
+                if (tps.BetType != null)
+                    race.GotRaces = true;
+
+                if (tps.PostDateTimeUTC >= DateTime.UtcNow && tps.PostDateTimeUTC < race.NextPostDateTimeUTC)
+                {
+                    race.NextPostDateTimeUTC = tps.PostDateTimeUTC;
+                    race.NextBetType = tps.BetType.code;
+                }
+            }
+        }
+    }
+
+    //kajdij raz on izmenit svoj true na false, i srabotaet (selectedDate ? "block" : "none")
+    void ChangeDay(DateTime selDay)
+    {
+        selectedDate = selDay;
+    }
+
+}

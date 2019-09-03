@@ -1,0 +1,53 @@
+﻿@page "/getcomingraces"
+@using WebApplication1.Shared
+@inject HttpClient Http
+@inject B75Config _Config
+
+
+@if (comingRaces == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <div class="apiResult">
+        @foreach (var race in comingRaces)
+        {
+            <div class="comingRaceBox @race.BetType">
+                <div>@race.BetType</div>
+                <div>Omsättning: <div class="turnover">@race.Turnover?.sum kr</div></div>
+                <div>Lopp Namn: <div class="raceName">@race.TrackName</div></div>
+                <div>
+                    Tid:<div class="tid">
+                        @(race.RaceTimeUTC.Date == DateTime.UtcNow.Date ? "Idag " +
+                race.RaceTimeUTC.ToLocalTime().ToShortTimeString() :
+                race.RaceTimeUTC.ToLocalTime().DayOfWeek.ToString() + " " + "" +
+                race.RaceTimeUTC.ToLocalTime().ToShortTimeString())
+                    </div>
+                </div>
+                <div>Jackpot: <div class="Jackpot">@(race.Jackpot.sum.HasValue ? (int)race.Jackpot.sum.Value : 0)</div></div>
+            </div>
+        }
+    </div>
+}
+
+@code {
+    List<ComingRaceBox> comingRaces;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // load config if it's not already loaded
+        if (!_Config.ConfigLoaded)
+        {
+            await _Config.GetConfig();
+        }
+
+        // call data service to get the coming race boxes
+        ReturnValue<List<ComingRaceBox>> rvComingRaces = await Http.GetJsonAsync<ReturnValue<List<ComingRaceBox>>>(
+                System.IO.Path.Combine(_Config.ConfigOptionsAPIServices.DataServiceAPI.Url, "ComingRaceBoxes")
+            );
+        Console.WriteLine(rvComingRaces.NicerErrorMessage);
+        // .. maybe we should check for errors here.. yes..
+        comingRaces = rvComingRaces.ReturnObject;
+    }
+}

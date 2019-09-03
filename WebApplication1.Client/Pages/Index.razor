@@ -1,0 +1,72 @@
+﻿@page "/"
+@using WebApplication1.Shared
+@inject Toolbelt.Blazor.I18nText.I18nText I18nText
+@inject Blazored.SessionStorage.ISessionStorageService sessionStorage
+
+<h1>@MyText.Welcome</h1>
+
+<ListRacing />
+
+@*@if (todos != null)
+    {
+        @foreach (var todo in todos)
+        {
+            <tr class="todo ">
+                <td class="text-center">
+                    <input type="checkbox" checked="@todo.Done" @onchange="@(eventArgs => { todo.Done = (bool)eventArgs.Value; save();  })" />
+                </td>
+                <td class="">@todo.Text</td>
+            </tr>
+        }
+    }*@
+
+
+
+@*<TrackDay />*@
+
+<div class="topImg">
+    <div class="picture">
+        <div class="txt1">
+            <div class="btn btn-lg btn-secondary">
+                <a href="Register">Register</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<GetComingRaces />
+
+@code {
+    //This code to Globalization Language
+    I18nText.MyText MyText = new I18nText.MyText();
+
+
+    //IList<Todo> todos = new List<Todo>
+    //{   
+    // new Todo { Text = "Test 1" },
+    // new Todo { Text = "Test 2" },
+    // new Todo { Text = "Test 3" },
+    // new Todo { Text = "Test 4" }
+    // };
+
+    protected override async Task OnInitializedAsync()
+    {
+        //Console.WriteLine(todos == null ? "todos is null 1" : todos.Count.ToString());
+
+        // GetItemAsync beret iz IList<Todo>(i v mesto mojet bit string), a key "todoList" mojet bit lyboj
+        //var todosX = await sessionStorage.GetItemAsync<IList<Todo>>("todoList");
+        //if (todosX != null)
+        //  todos = todosX;
+
+        //Console.WriteLine(todosX == null ? "todos is null 2" : todosX.Count.ToString());
+
+        MyText = await I18nText.GetTextTableAsync<I18nText.MyText>(this);
+    }//
+
+    //async Task save()
+    //{
+    //    // "todoList"eto key a todos eto list
+    //    await sessionStorage.SetItemAsync("todoList", todos);
+    //    Console.WriteLine("save()");
+    //}
+}

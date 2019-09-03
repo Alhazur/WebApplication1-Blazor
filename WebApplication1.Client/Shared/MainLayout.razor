@@ -1,0 +1,192 @@
+﻿@inherits LayoutComponentBase
+@inject Toolbelt.Blazor.I18nText.I18nText I18nText
+@inject IUriHelper UriHelper
+
+
+<div class="headertop">
+    <NavMenu />
+</div>
+
+
+<div class="container">
+    @*<div>
+            <a href="" target="_blank" class="ml-md-auto">About</a>
+        </div>*@
+    <div>
+        @Body
+    </div>
+    <div class="container foot">
+        @currentPage
+        &copy;@DateTime.Now.Year - Buster75
+    </div>
+</div>
+
+<footer id="sidebar">
+    <div class="container">
+        <div class="pb-3">
+            <div id="sider">
+                <div class="menu menu1 @(Done == true ? "active" : "")">
+                    <ul>
+                        <li>
+                            <div class="menubutton">
+                                <a href="" class="@(string.IsNullOrEmpty(UriHelper.ToBaseRelativePath(UriHelper.GetBaseUri(), UriHelper.GetAbsoluteUri()))?"active":"")">
+                                    <div class="icon">
+                                        <i class="fa fa-home" aria-hidden="true"></i>
+                                    </div>
+                                    <div class="name">
+                                        <span data-text="@MyText.Home">&nbsp;</span>
+                                    </div>
+                                </a>
+                            </div>
+                        </li>
+                        <li>
+                            <div class="menubutton">
+                                <a href="getcomingraces" class="@(UriHelper.ToBaseRelativePath(UriHelper.GetBaseUri(), UriHelper.GetAbsoluteUri())=="getcomingraces"?"active":"")">
+                                    <div class="icon">
+                                        <i class="fa fa-globe" aria-hidden="true"></i>
+                                    </div>
+                                    <div class="name">
+                                        <span data-text="Racing">&nbsp;</span>
+                                    </div>
+                                </a>
+                            </div>
+                        </li>
+                        <li>
+                            <div class="menubutton">
+                                <a href="" class="@(string.IsNullOrEmpty(UriHelper.ToBaseRelativePath(UriHelper.GetBaseUri(), UriHelper.GetAbsoluteUri()))?"active":"")">
+                                    <div class="icon">
+                                        <i class="fa fa-search" aria-hidden="true"></i>
+                                    </div>
+                                    <div class="name">
+                                        <span data-text="@MyText.Home">&nbsp;</span>
+                                    </div>
+                                </a>
+                            </div>
+                        </li>
+                        <li>
+                            <div class="menubutton">
+                                <a href="listracing" class="@(UriHelper.ToBaseRelativePath(UriHelper.GetBaseUri(), UriHelper.GetAbsoluteUri())=="listracing"?"active":"")">
+                                    <div class="icon">
+                                        <i class="fa fa-list" aria-hidden="true"></i>
+                                    </div>
+                                    <div class="name">
+                                        <span data-text="List">&nbsp;</span>
+                                    </div>
+                                </a>
+                            </div>
+                        </li>
+                        <li>
+                            <div class="menubuttonColor">
+
+                            </div>
+                            <div class="menubutton menubuttonChange" @onclick=@CheangeMenu1>
+                                <a>
+                                    <div class="icon">
+                                        <i class="fa fa-user" aria-hidden="true"></i>
+                                    </div>
+                                    <div class="name">
+                                        <span data-text="MENU">&nbsp;</span>
+                                    </div>
+                                </a>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+                <div class="menu menu2 @(Done == false ? "active" : "")">
+                    <ul>
+                        <li>
+                            <div class="menubuttonColor menubuttonColor2">
+
+                            </div>
+                            <div class="menubutton menubuttonChange" @onclick=@CheangeMenu2>
+                                <a>
+                                    <div class="icon">
+                                        <i class="fa fa-user" aria-hidden="true"></i>
+                                    </div>
+                                    <div class="name">
+                                        <span data-text="MENU">&nbsp;</span>
+                                    </div>
+                                </a>
+                            </div>
+                        </li>
+                        <li>
+                            <div class="menubutton">
+                                <a href="" class="@(string.IsNullOrEmpty(UriHelper.ToBaseRelativePath(UriHelper.GetBaseUri(), UriHelper.GetAbsoluteUri()))?"active":"")">
+                                    <div class="icon">
+                                        <i class="fa fa-home" aria-hidden="true"></i>
+                                    </div>
+                                    <div class="name">
+                                        <span data-text="@MyText.Home">&nbsp;</span>
+                                    </div>
+                                </a>
+                            </div>
+                        </li>
+                        <li>
+                            <div class="menubutton">
+                                <a href="getcomingraces" class="@(UriHelper.ToBaseRelativePath(UriHelper.GetBaseUri(), UriHelper.GetAbsoluteUri())=="getcomingraces"?"active":"")">
+                                    <div class="icon">
+                                        <i class="fa fa-bluetooth" aria-hidden="true"></i>
+                                    </div>
+                                    <div class="name">
+                                        <span data-text="Privacy">&nbsp;</span>
+                                    </div>
+                                </a>
+                            </div>
+                        </li>
+                        <li>
+                            <div class="menubutton">
+                                <a href="" class="@(string.IsNullOrEmpty(UriHelper.ToBaseRelativePath(UriHelper.GetBaseUri(), UriHelper.GetAbsoluteUri()))?"active":"")">
+                                    <div class="icon">
+                                        <i class="fa fa-home" aria-hidden="true"></i>
+                                    </div>
+                                    <div class="name">
+                                        <span data-text="@MyText.Home">&nbsp;</span>
+                                    </div>
+                                </a>
+                            </div>
+                        </li>
+                        <li>
+                            <div class="menubutton">
+                                <a href="getcomingraces" class="@(UriHelper.ToBaseRelativePath(UriHelper.GetBaseUri(), UriHelper.GetAbsoluteUri())=="getcomingraces"?"active":"")">
+                                    <div class="icon">
+                                        <i class="fa fa-bluetooth" aria-hidden="true"></i>
+                                    </div>
+                                    <div class="name">
+                                        <span data-text="Privacy">&nbsp;</span>
+                                    </div>
+                                </a>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</footer>
+
+@code {
+
+    string currentPage;
+
+    //This code to Globalization Language
+    I18nText.MyText MyText = new I18nText.MyText();
+
+    protected override async Task OnInitializedAsync()
+    {
+        MyText = await I18nText.GetTextTableAsync<I18nText.MyText>(this);
+        //                                                                  shows where are you (url path)
+        currentPage = UriHelper.ToBaseRelativePath(UriHelper.GetBaseUri(), UriHelper.GetAbsoluteUri());
+    }
+
+    bool Done = true;
+
+    void CheangeMenu1()
+    {
+        Done = false;
+    }
+    void CheangeMenu2()
+    {
+        Done = true;
+    }
+
+}

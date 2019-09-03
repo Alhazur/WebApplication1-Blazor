@@ -1,0 +1,271 @@
+﻿@page "/trackday/{RaceDay}/{TrackSlug}/{BetType}"
+@using WebApplication1.Shared
+@using WebApplication1.Shared.ATG
+@inject HttpClient Http
+@inject B75Config _Config
+@inject Blazored.SessionStorage.ISessionStorageService sessionStorage
+
+
+@if (Loading)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <div>
+        <section>
+            @for (int idx = 0; idx < SelectedDay.RacingCard.races.Length; idx++)
+            {
+                Race race = SelectedDay.RacingCard.races[idx];
+                int legNr = SelectedDay.RaceInfos[idx].LegNr;
+
+                <div class="RaceRanking">
+                    <div class="RaceRanking1">
+                        <div class="LegNr">
+                            @legNr
+                        </div>
+                    </div>
+                    @for (int idxHest = 0; idxHest < race.starts.Length; idxHest++)
+                    {
+                        Start horseInfo = race.starts[idxHest];
+                        bool scratched = SelectedDay.RaceInfos[idx].PoolInfo.vpOdds[idxHest].scratched;
+
+                        <div class="StartNr @(SelectedDay.RaceInfos[idx].PoolInfo.vpOdds[idxHest].scratched ? "scratchedTrue" : "")"
+                             @onmouseout="@((e) => HandleDragLeave(e, horseInfo.startNr, legNr, scratched))">
+                            <span class="oi oi-resize-width movething"></span>
+                            <div class="@(selectedHorsesList[legNr].ContainsKey(horseInfo.startNr) ? "selectedStartNr" : "")"
+                                 @onclick=@(() => horseClick(legNr, horseInfo.startNr, scratched))>
+                                @horseInfo.startNr
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </section>
+        <section>
+            @for (int idx = 0; idx < SelectedDay.RacingCard.races.Length; idx++)
+            {
+                Race race = SelectedDay.RacingCard.races[idx];
+
+                <div>@SelectedDay.RaceInfos[idx].LegNr</div>
+                <div>Lopp: @race.raceNr</div>
+                <div>@SelectedDay.RacingCard.date.year-@SelectedDay.RacingCard.date.month-@SelectedDay.RacingCard.date.date</div>
+                <div>Tid: @race.postTime.hour @race.postTime.minute.ToString("00")</div>
+                <div>@SelectedDay.RacingCard.track.domesticText @race.distance</div>
+                <div></div>
+                <div>@SelectedDay.RacingCard.betType.code</div>
+                <div>@race.conditions.textLong</div>
+
+                // etot kod dlya proverki
+                @*<p>@if (true) { Console.WriteLine(Newtonsoft.Json.JsonConvert.SerializeObject(race.starts[0])); }</p>*@
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Häst</th>
+                            <th>Kusk</th>
+                            <th>V-Odds</th>
+                            <th>P-Odds</th>
+                            <th>Skor</th>
+                            <th>Spår</th>
+                            <th>Form</th>
+                        </tr>
+                    </thead>
+                    @for (int idxHest = 0; idxHest < race.starts.Length; idxHest++)
+                    {
+                        Start horseInfo = race.starts[idxHest];
+                        int legNr = SelectedDay.RaceInfos[idx].LegNr;
+                        bool scratched = SelectedDay.RaceInfos[idx].PoolInfo.vpOdds[idxHest].scratched;
+
+                        <tbody class="@(SelectedDay.RaceInfos[idx].PoolInfo.vpOdds[idxHest].scratched ? " scratchedTrue" : "" )">
+                            <tr>
+                                <td class="StartNrTable @(selectedHorsesList[legNr].ContainsKey(horseInfo.startNr) ? "selectedStartNr" : "")"
+                                    @onclick=@(() => horseClick(legNr, horseInfo.startNr, scratched))>
+                                    @horseInfo.startNr
+                                </td>
+                                <td>@horseInfo.horse.key.name</td>
+                                <td>@horseInfo.driver.name @horseInfo.driver.surName</td>
+                                <td>@SelectedDay.RaceInfos[idx].PoolInfo.vpOdds[idxHest].vinnarOdds.odds</td>
+                                <td>
+                                    @SelectedDay.RaceInfos[idx].PoolInfo.vpOdds[idxHest].platsOdds.minOdds.odds -
+                                    @SelectedDay.RaceInfos[idx].PoolInfo.vpOdds[idxHest].platsOdds.maxOdds.odds
+                                </td>
+                                <td>
+                                    @getShoeString(SelectedDay.TrackBetInfos[SelectedDay
+                                    .RaceInfos[idx].TrackId]
+                                    .shoeInfoRace[race.raceNr - 1]
+                                    .shoeInfoStart[horseInfo.startNr - 1]
+                                    .shoeInfoCurrent)
+                                </td>
+                                <td>
+                                    @if (horseInfo.trotStartInfo != null)
+                                    {
+                                        @(horseInfo.trotStartInfo.distance + ":" + horseInfo.trotStartInfo.postPosition)
+                                    }
+                                </td>
+                                <td>
+                                    @{
+                                        double formFactor = 0;
+                                        double count = 0;
+                                        double ffDivider = 0;
+                                        foreach (var item in horseInfo.horseStat.pastPerformances)
+                                        {
+                                            @if (item.placeInfo.disqualified)
+                                            {
+                                                count += 20;
+                                                ffDivider++;
+                                            }
+                                            else if (item.placeInfo.place > 0)
+                                            {
+                                                count += item.placeInfo.place;
+                                                ffDivider++;
+                                            }
+                                        }
+                                        formFactor = Math.Round((double)(count / ffDivider * 100)) / 100.0;
+                                    }
+                                    @formFactor
+                                </td>
+                            </tr>
+                        </tbody>
+                    }
+                </table>
+            }
+        </section>
+        <section>
+            @if (SelectedDay.RacingCard.betType.code == SelectedDay.RacingCard.betType.code)
+            {   //mojno dobavit parametri na komp kotoriy vizval || vizvat parametr iz komp
+                <DoubleOdds SelectedDay="@SelectedDay" />
+            }
+        </section>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public string RaceDay { get; set; }
+    [Parameter]
+    public string TrackSlug { get; set; }
+    [Parameter]
+    public string BetType { get; set; }
+
+    bool Loading = true;
+
+    DayTrackInfo SelectedDay;
+
+    //sozdat Class i sdelat iz nego list ili Dictionary
+    Dictionary<int, Dictionary<int, TrackDays>> selectedHorsesList;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // load config if it's not already loaded
+        if (!_Config.ConfigLoaded)
+        {
+            await _Config.GetConfig();
+        }
+
+        //if (string.IsNullOrEmpty(RaceDay))
+        //    RaceDay = "2019-08-27";
+        //if (string.IsNullOrEmpty(TrackSlug))
+        //    TrackSlug = "solvalla";
+        //if (string.IsNullOrEmpty(BetType))
+        //    BetType = "DD";
+
+        string path = System.IO.Path.Combine(_Config.ConfigOptionsAPIServices.DataServiceAPI.Url, "DayTrackInfo");
+        path += $"?pRaceDay={RaceDay}&pTrackSlug={TrackSlug}&pBetType={BetType}";
+        Console.WriteLine(path);
+
+        //ReturnValue<DayTrackInfo> rvComingRaces = await Http.GetJsonAsync<ReturnValue<DayTrackInfo>>(path);
+        string jsonResult = await Http.GetStringAsync(path);
+        //Console.WriteLine(x);
+        ReturnValue<DayTrackInfo> rvComingRaces = Newtonsoft.Json.JsonConvert.DeserializeObject<ReturnValue<DayTrackInfo>>(jsonResult);
+        Console.WriteLine(rvComingRaces.NicerErrorMessage);
+
+        SelectedDay = rvComingRaces.ReturnObject;
+
+        // GetItemAsync beret iz IList<Todo>(i v mesto mojet bit string), a key "todoList" mojet bit lyboj
+        var shl = await sessionStorage.GetItemAsync<string>("Key");
+        if (shl != null)
+        {
+            selectedHorsesList = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<int, Dictionary<int, TrackDays>>>(shl);
+        }
+        else
+        {
+            selectedHorsesList = new Dictionary<int, Dictionary<int, TrackDays>>();
+            for (int i = 0; i < SelectedDay.RaceInfos.Length; i++)
+            {
+                selectedHorsesList.Add(SelectedDay.RaceInfos[i].LegNr, new Dictionary<int, TrackDays>());
+            }
+        }
+
+        Loading = false;
+    }
+
+    public string getShoeString(ShoeInfo shoeInfo)
+    {
+        if (shoeInfo != null)
+        {
+            if (shoeInfo.foreshoes == null && shoeInfo.hindshoes == null)
+                return "(cc)";
+            else
+                return (shoeInfo.foreshoes.Value ? "c" :
+                       (shoeInfo.foreshoes == null ? "-" : "¢")) + "" +
+                       (shoeInfo.hindshoes.Value ? "c" :
+                       (shoeInfo.hindshoes == null ? "-" : "¢"));
+        }
+        else
+            return "--";
+    }
+
+    async Task horseClick(int legNr, int startNr, bool raceExict)
+    {
+        if (raceExict)
+        {
+            return;
+        }
+
+        if (selectedHorsesList[legNr].ContainsKey(startNr))
+        {
+            selectedHorsesList[legNr].Remove(startNr);
+        }
+        else
+        {
+            selectedHorsesList[legNr].Add(startNr, new TrackDays() { LegNr = legNr, StartNr = startNr });
+            await sessionStorage.SetItemAsync("Key", Newtonsoft.Json.JsonConvert.SerializeObject(selectedHorsesList));
+        }
+    }
+
+    //private void HandleDragEnter(UIMouseEventArgs e)
+    //{
+    //    if (e.Buttons == 1)
+    //    {
+    //        Console.WriteLine("enter");
+    //        Console.WriteLine(Newtonsoft.Json.JsonConvert.SerializeObject(e));
+    //    }
+    //}
+
+    async Task HandleDragLeave(UIMouseEventArgs e, int startNr, int legNr, bool raceExict)
+    {
+        Console.WriteLine("leave");
+        if (e.Buttons == 1)
+        {
+            if (raceExict)
+            {
+                return;
+            }
+
+            if (selectedHorsesList[legNr].ContainsKey(startNr))
+            {
+                selectedHorsesList[legNr].Remove(startNr);
+            }
+            else
+            {
+                selectedHorsesList[legNr].Add(startNr, new TrackDays() { LegNr = legNr, StartNr = startNr });
+                await sessionStorage.SetItemAsync("Key", Newtonsoft.Json.JsonConvert.SerializeObject(selectedHorsesList));
+            }
+
+            Console.WriteLine("startNr: " + startNr);
+        }
+    }
+
+}
